@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Square } from './components/Square'
+import { useEffect, useState } from 'react'
 import { ButtonResetGame } from './components/Buttons'
 import { ResultModal } from './components/ResultModal'
 import { TURNS, INITIALBOARDSTATE, INITIALTURNSTATE, INITIALWINNERSTATE } from './utils/constants';
@@ -7,11 +6,21 @@ import { WinnerType } from './utils/types';
 import { checkWinner, checkEndGame } from './logic/board';
 import { BoardGame } from './components/BoardGame';
 import { Turns } from './components/Turns';
+import { resetGameStorage, saveGameStorage } from './logic/storage';
 
 function App() {
-  const [board, setBoard] = useState<string[]>(INITIALBOARDSTATE)
-  const [turn, setTurn] = useState<string>(INITIALTURNSTATE)
-  const [winner, setWinner] = useState<WinnerType>(INITIALWINNERSTATE)
+  const [board, setBoard] = useState<string[]>(() => {
+    const boardFromStorage = window.localStorage.getItem('board')
+    return boardFromStorage ? JSON.parse(boardFromStorage) : INITIALBOARDSTATE
+  })
+  const [turn, setTurn] = useState<string>(() => {
+    const turnFromStorage = window.localStorage.getItem('turn')
+    return turnFromStorage ?? INITIALTURNSTATE
+  })
+  const [winner, setWinner] = useState<WinnerType>(() => {
+    const winnerFromStorage = window.localStorage.getItem('winner')
+    return JSON.parse(winnerFromStorage) ?? INITIALWINNERSTATE
+  })
   
   const updateBoard = (index: number): void => {
     // No sobreescribir cuadrado cuando ya está marcado o cuando ya ha terminado la partida
@@ -39,7 +48,14 @@ function App() {
     setBoard(INITIALBOARDSTATE)
     setTurn(INITIALTURNSTATE)
     setWinner(INITIALWINNERSTATE)
+
+    resetGameStorage()
   }
+
+  useEffect(() => {
+    // Guardar partida en localstorage
+    saveGameStorage(board, turn, winner)
+  }, [board, turn, winner])
 
   return (
     <>
